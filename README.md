@@ -73,52 +73,195 @@ React-Study-Companion-App--JavaScript-Version-/
 ## Core Implementation
 
 ### **A. Flashcard Component (React Basics)**
-<!-- Documentation: https://react.dev/reference/react/useState -->
-- **Purpose**: Displays a single flashcard that flips when clicked.
-- **Concepts Covered**: Functional Components, `useState`, Props, Event Handling.
+<!-- 
+Documentation References:
+- useState: https://react.dev/reference/react/useState
+- Event Handling: https://react.dev/learn/responding-to-events
+- Component Basics: https://react.dev/learn/your-first-component
+- Props: https://react.dev/learn/passing-props-to-a-component
+-->
 
-```jsx
-import React, { useState } from 'react';
+## Core Concepts Implementation Guide
 
+### 1. React Fundamentals
+<!-- Documentation: https://react.dev/learn/describing-the-ui -->
+
+#### Component Architecture
+```jsx:src/components/Flashcard.js
 /**
- * Flashcard component that displays a question.
- * Clicking on it reveals the answer.
+ * Core React Concepts Demonstrated:
+ * 1. Functional Components
+ * 2. JSX Syntax
+ * 3. Props
+ * 4. State Management
+ * 5. Event Handling
+ * 6. Conditional Rendering
  * 
- * @param {string} question - The question text.
- * @param {string} answer - The answer text.
+ * Implementation Details:
+ * - Uses useState for flip state
+ * - Implements click handler for card flipping
+ * - Demonstrates prop passing
+ * - Shows conditional rendering (question/answer)
+ * - Includes accessibility attributes
  */
-const Flashcard = ({ question, answer }) => {
-  const [flipped, setFlipped] = useState(false); // State to track if the card is flipped
 
+// Component implementation with detailed comments
+const Flashcard = ({ question, answer }) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [hasBeenReviewed, setHasBeenReviewed] = useState(false);
+
+  // Event handler with multiple state updates
+  const handleFlip = useCallback(() => {
+    setIsFlipped(!isFlipped);
+    if (!hasBeenReviewed) {
+      setHasBeenReviewed(true);
+    }
+  }, [isFlipped, hasBeenReviewed]);
+
+  // Accessibility-enhanced render method
   return (
     <div 
-      className="flashcard" 
-      onClick={() => setFlipped(!flipped)} // Flip the card when clicked
-      style={{
-        border: '1px solid #ddd',
-        padding: '20px',
-        cursor: 'pointer',
-        textAlign: 'center',
-        marginBottom: '10px',
-      }}
+      className={`flashcard ${isFlipped ? 'flipped' : ''}`}
+      onClick={handleFlip}
+      role="button"
+      tabIndex={0}
+      aria-label={`Flashcard: ${isFlipped ? 'Showing answer' : 'Showing question'}`}
     >
-      {flipped ? answer : question} 
+      <div className="card-content">
+        {isFlipped ? (
+          <div className="answer">{answer}</div>
+        ) : (
+          <div className="question">{question}</div>
+        )}
+      </div>
+      {hasBeenReviewed && (
+        <div className="review-indicator">Reviewed</div>
+      )}
     </div>
   );
 };
-
-export default Flashcard;
 ```
 
-**Example Usage:**
+#### State Management Flow
+```mermaid
+graph TD
+    A[User Clicks Card] --> B{Check State}
+    B -->|Not Flipped| C[Show Answer]
+    B -->|Flipped| D[Show Question]
+    C --> E[Update Review Status]
+    D --> E
+    E --> F[Re-render Component]
+```
+
+#### Component Testing
+```jsx:src/tests/Flashcard.test.js
+describe('Flashcard Component', () => {
+  const mockProps = {
+    question: 'What is React?',
+    answer: 'A JavaScript library for building user interfaces'
+  };
+
+  it('renders question by default', () => {
+    render(<Flashcard {...mockProps} />);
+    expect(screen.getByText(mockProps.question)).toBeInTheDocument();
+  });
+
+  it('flips to show answer on click', () => {
+    render(<Flashcard {...mockProps} />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.getByText(mockProps.answer)).toBeInTheDocument();
+  });
+
+  it('tracks review status', () => {
+    render(<Flashcard {...mockProps} />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.getByText('Reviewed')).toBeInTheDocument();
+  });
+});
+```
+
+#### Key Concepts Explained
+
+1. **Functional Components**
 ```jsx
-<Flashcard question="What is JSX?" answer="A syntax extension for JavaScript." />
+// Modern functional component pattern
+const Component = (props) => {
+  // Component logic here
+  return <div>{/* JSX */}</div>;
+};
 ```
 
-### **B. Flashcard List Component**
-<!-- Documentation: https://react.dev/reference/react/useMemo -->
-- **Purpose**: Renders multiple flashcards.
-- **Concepts Covered**: Props, Context API.
+2. **Props & PropTypes**
+```jsx
+// Type checking with PropTypes
+Flashcard.propTypes = {
+  question: PropTypes.string.isRequired,
+  answer: PropTypes.string.isRequired,
+  difficulty: PropTypes.oneOf(['easy', 'medium', 'hard']),
+  onFlip: PropTypes.func
+};
+```
+
+3. **State Management**
+```jsx
+// Multiple state variables
+const [state1, setState1] = useState(initial1);
+const [state2, setState2] = useState(initial2);
+
+// State updates with previous state
+setState1(prev => !prev);
+```
+
+4. **Event Handling**
+```jsx
+// Event handler with multiple actions
+const handleEvent = useCallback(() => {
+  setState1(newValue);
+  setState2(prev => !prev);
+  onExternalAction?.();
+}, [onExternalAction]);
+```
+
+5. **Conditional Rendering**
+```jsx
+// Different conditional rendering patterns
+{condition && <Component />}
+{condition ? <ComponentA /> : <ComponentB />}
+{condition === 'A' && <ComponentA />}
+{condition === 'B' && <ComponentB />}
+```
+
+#### Common Pitfalls and Solutions
+
+```jsx
+// ❌ Don't mutate state directly
+const BadExample = () => {
+  const [items, setItems] = useState([]);
+  items.push(newItem); // Direct mutation
+
+  // ✅ Instead, create new state
+  setItems([...items, newItem]);
+};
+
+// ❌ Don't use state setter in render
+const BadRender = () => {
+  setState(newValue); // Causes infinite renders
+
+  // ✅ Instead, use useEffect or event handlers
+  useEffect(() => {
+    setState(newValue);
+  }, [dependency]);
+};
+```
+
+### **B. FlashcardList Component (Performance Optimization)**
+<!-- 
+Documentation References:
+- useMemo: https://react.dev/reference/react/useMemo
+- useContext: https://react.dev/reference/react/useContext
+- Performance: https://react.dev/learn/render-and-commit
+- Array Rendering: https://react.dev/learn/rendering-lists
+-->
 
 ```jsx
 import React, { useContext, useMemo } from 'react';
@@ -126,229 +269,511 @@ import Flashcard from './Flashcard';
 import { QuizContext } from '../context/QuizContext';
 
 /**
- * FlashcardList component retrieves flashcards from QuizContext.
- * Renders multiple Flashcard components.
+ * FlashcardList Component
+ * 
+ * A performance-optimized component that renders a list of flashcards.
+ * Uses useMemo to prevent unnecessary re-renders of the flashcard list.
+ * 
+ * @component
+ * @example
+ * <FlashcardList />
+ * 
+ * Key Concepts Demonstrated:
+ * 1. useMemo Hook - Memoizes flashcards array to prevent unnecessary re-renders
+ * 2. useContext Hook - Accesses global flashcard data
+ * 3. Array Mapping - Efficiently renders multiple components
+ * 4. Performance Optimization - Implements React best practices
  */
 const FlashcardList = () => {
+  // Access flashcards from global context
+  // Documentation: https://react.dev/reference/react/useContext
   const { flashcards } = useContext(QuizContext);
   
-  const memoizedFlashcards = useMemo(() => flashcards, [flashcards]);
+  /**
+   * Memoize flashcards array to prevent unnecessary re-renders
+   * Only re-creates the memoized value when flashcards changes
+   * 
+   * Documentation: https://react.dev/reference/react/useMemo#usememo
+   */
+  const memoizedFlashcards = useMemo(
+    () => flashcards,
+    [flashcards] // Dependency array
+  );
 
   return (
     <div className="flashcard-list">
+      {/* 
+        Map through memoized flashcards array
+        Documentation: https://react.dev/learn/rendering-lists#rendering-data-from-arrays
+      */}
       {memoizedFlashcards.map((card, index) => (
-        <Flashcard key={index} {...card} />
+        <Flashcard 
+          key={index} // Unique key for React's reconciliation process
+          {...card}   // Spread operator to pass props
+        />
       ))}
     </div>
   );
 };
 
+// PropTypes validation (if using TypeScript, consider using interfaces instead)
+FlashcardList.propTypes = {
+  // Context provides the flashcards, so no direct props needed
+};
+
 export default FlashcardList;
 ```
 
-**Example Usage (Inside `App.js`):**
+**Performance Considerations:**
+1. `useMemo` prevents unnecessary re-renders of the flashcards array
+2. Proper key usage in map function for optimal reconciliation
+3. Context consumption optimized for component updates
+4. Spread operator for efficient prop passing
+
+**Common Pitfalls to Avoid:**
 ```jsx
-import { QuizProvider } from './context/QuizContext';
-import FlashcardList from './components/FlashcardList';
+// ❌ Don't do this - creates new array every render
+const badExample = () => {
+  const cards = flashcards.map(card => ({ ...card })); // New reference each time
+  return cards.map(card => <Flashcard {...card} />);
+};
 
-function App() {
-  return (
-    <QuizProvider>
-      <FlashcardList />
-    </QuizProvider>
-  );
-}
-
-export default App;
+// ✅ Do this - memoized array reference
+const goodExample = () => {
+  const cards = useMemo(() => flashcards, [flashcards]);
+  return cards.map(card => <Flashcard {...card} />);
+};
 ```
 
-### **C. Quiz Component (useReducer)**
-- **Purpose**: Handles quiz logic (tracking questions and score).
-- **Concepts Covered**: `useReducer`, Complex State Management.
-
+**Testing Considerations:**
 ```jsx
-import React, { useReducer } from 'react';
+// Example test for FlashcardList component
+describe('FlashcardList', () => {
+  it('renders all flashcards from context', () => {
+    const mockFlashcards = [
+      { question: 'Q1', answer: 'A1' },
+      { question: 'Q2', answer: 'A2' }
+    ];
+
+    render(
+      <QuizContext.Provider value={{ flashcards: mockFlashcards }}>
+      <FlashcardList />
+      </QuizContext.Provider>
+    );
+
+    expect(screen.getAllByRole('button')).toHaveLength(2);
+  });
+});
+```
+
+### **C. Quiz Component (Complex State Management)**
+<!-- 
+Documentation References:
+- useReducer: https://react.dev/reference/react/useReducer
+- useCallback: https://react.dev/reference/react/useCallback
+- Event Handling: https://react.dev/learn/responding-to-events
+- TypeScript with Reducers: https://react.dev/reference/react/useReducer#specifying-the-action-type
+-->
+
+```jsx:src/components/Quiz.js
+import React, { useReducer, useCallback } from 'react';
 
 /**
- * Initial state for the quiz reducer.
+ * Action Types
+ * Documentation: https://redux.js.org/style-guide/#define-action-types-as-constants
  */
-const initialState = { currentQuestion: 0, score: 0 };
+const ACTIONS = {
+  NEXT_QUESTION: 'NEXT_QUESTION',
+  INCREMENT_SCORE: 'INCREMENT_SCORE',
+  RESET_QUIZ: 'RESET_QUIZ'
+} as const;
 
 /**
- * Reducer function to handle quiz state updates.
+ * Initial state for the quiz
+ * Documentation: https://react.dev/learn/managing-state#choosing-the-state-structure
+ */
+const initialState = {
+  currentQuestion: 0,
+  score: 0,
+  isComplete: false
+};
+
+/**
+ * Quiz state reducer
+ * Handles all state transitions for the quiz component
+ * 
+ * @param {Object} state - Current state
+ * @param {Object} action - Action to perform
+ * @returns {Object} New state
+ * 
+ * Documentation: https://react.dev/learn/extracting-state-logic-into-a-reducer
  */
 function quizReducer(state, action) {
   switch (action.type) {
-    case 'NEXT_QUESTION':
-      return { ...state, currentQuestion: state.currentQuestion + 1 };
-    case 'INCREMENT_SCORE':
-      return { ...state, score: state.score + 1 };
+    case ACTIONS.NEXT_QUESTION:
+      return {
+        ...state,
+        currentQuestion: state.currentQuestion + 1,
+        isComplete: state.currentQuestion + 1 >= action.payload.totalQuestions
+      };
+    case ACTIONS.INCREMENT_SCORE:
+      return {
+        ...state,
+        score: state.score + 1
+      };
+    case ACTIONS.RESET_QUIZ:
+      return initialState;
     default:
       return state;
   }
 }
 
 /**
- * Quiz component that renders questions and tracks progress.
+ * Quiz Component
+ * 
+ * A complex component that manages quiz state using useReducer.
+ * Implements memoized callbacks for performance optimization.
+ * 
+ * @component
+ * @param {Object} props
+ * @param {Array} props.questions - Array of quiz questions
+ * @param {Function} props.onComplete - Callback when quiz is completed
+ * 
+ * Key Concepts Demonstrated:
+ * 1. useReducer - Complex state management
+ * 2. useCallback - Memoized event handlers
+ * 3. Prop Types - Runtime type checking
+ * 4. Performance Optimization - Preventing unnecessary re-renders
  */
-const Quiz = ({ questions }) => {
+const Quiz = ({ questions, onComplete }) => {
   const [state, dispatch] = useReducer(quizReducer, initialState);
 
+  /**
+   * Memoized callback for handling correct answers
+   * Documentation: https://react.dev/reference/react/useCallback#skipping-re-rendering-of-components
+   */
+  const handleCorrectAnswer = useCallback(() => {
+    dispatch({ type: ACTIONS.INCREMENT_SCORE });
+    dispatch({ 
+      type: ACTIONS.NEXT_QUESTION,
+      payload: { totalQuestions: questions.length }
+    });
+  }, [questions.length]);
+
+  /**
+   * Memoized callback for handling incorrect answers
+   */
+  const handleIncorrectAnswer = useCallback(() => {
+    dispatch({ 
+      type: ACTIONS.NEXT_QUESTION,
+      payload: { totalQuestions: questions.length }
+    });
+  }, [questions.length]);
+
+  // Call onComplete when quiz is finished
+  React.useEffect(() => {
+    if (state.isComplete) {
+      onComplete?.(state.score);
+    }
+  }, [state.isComplete, state.score, onComplete]);
+
+  if (state.isComplete) {
   return (
-    <div>
-      <h2>Question {state.currentQuestion + 1}</h2>
-      <p>{questions[state.currentQuestion]}</p>
-      <button onClick={() => dispatch({ type: 'INCREMENT_SCORE' })}>Correct</button>
-      <button onClick={() => dispatch({ type: 'NEXT_QUESTION' })}>Next Question</button>
-      <h3>Score: {state.score}</h3>
+      <div className="quiz-complete">
+        <h2>Quiz Complete!</h2>
+        <p>Final Score: {state.score} / {questions.length}</p>
+        <button 
+          onClick={() => dispatch({ type: ACTIONS.RESET_QUIZ })}
+          className="reset-button"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="quiz-container">
+      <div className="quiz-header">
+        <h2>Question {state.currentQuestion + 1} of {questions.length}</h2>
+        <span className="score">Score: {state.score}</span>
+      </div>
+      
+      <div className="question-card">
+        <p>{questions[state.currentQuestion]?.text}</p>
+        <div className="answer-buttons">
+          <button onClick={handleCorrectAnswer}>Correct</button>
+          <button onClick={handleIncorrectAnswer}>Incorrect</button>
+        </div>
+      </div>
     </div>
   );
+};
+
+/**
+ * PropTypes for runtime type checking
+ * Documentation: https://react.dev/reference/react/Component#static-proptypes
+ */
+Quiz.propTypes = {
+  questions: PropTypes.arrayOf(
+    PropTypes.shape({
+      text: PropTypes.string.isRequired,
+      answer: PropTypes.string.isRequired
+    })
+  ).isRequired,
+  onComplete: PropTypes.func
 };
 
 export default Quiz;
 ```
 
-**Example Usage:**
-```jsx
-const questions = ["What is React?", "What is a component?", "What is state?"];
+**Testing the Quiz Component:**
+```jsx:src/tests/Quiz.test.js
+import { render, screen, fireEvent } from '@testing-library/react';
+import Quiz from '../components/Quiz';
 
-<Quiz questions={questions} />
+describe('Quiz Component', () => {
+  const mockQuestions = [
+    { text: 'Question 1', answer: 'Answer 1' },
+    { text: 'Question 2', answer: 'Answer 2' }
+  ];
+
+  it('renders initial question', () => {
+    render(<Quiz questions={mockQuestions} />);
+    expect(screen.getByText(/Question 1 of 2/)).toBeInTheDocument();
+  });
+
+  it('increments score on correct answer', () => {
+    render(<Quiz questions={mockQuestions} />);
+    fireEvent.click(screen.getByText('Correct'));
+    expect(screen.getByText(/Score: 1/)).toBeInTheDocument();
+  });
+
+  it('completes quiz after all questions', () => {
+    const onComplete = jest.fn();
+    render(<Quiz questions={mockQuestions} onComplete={onComplete} />);
+    
+    // Answer all questions
+    fireEvent.click(screen.getByText('Correct'));
+    fireEvent.click(screen.getByText('Correct'));
+    
+    expect(screen.getByText(/Quiz Complete!/)).toBeInTheDocument();
+    expect(onComplete).toHaveBeenCalledWith(2);
+  });
+});
 ```
 
-### **D. Context API for Global State**
-**QuizContext.js** (Stores flashcard data)
-```jsx
-import React, { createContext, useState } from 'react';
+**Performance Optimization Notes:**
+1. `useCallback` for event handlers prevents unnecessary re-renders
+2. `useReducer` centralizes state logic for better maintainability
+3. Memoized components prevent child re-renders
+4. Effect cleanup prevents memory leaks
 
+### **D. Context API for Global State Management**
+<!-- 
+Documentation References:
+- Context API: https://react.dev/reference/react/createContext
+- useContext: https://react.dev/reference/react/useContext
+- Context Provider: https://react.dev/learn/passing-data-deeply-with-context
+- Performance: https://react.dev/reference/react/memo#optimizing-a-context-value
+-->
+
+```jsx:src/context/QuizContext.js
+import React, { createContext, useContext, useReducer, useMemo } from 'react';
+
+/**
+ * Quiz Context
+ * Provides global state management for quiz-related data
+ * 
+ * @type {React.Context}
+ */
 export const QuizContext = createContext();
 
 /**
- * Provides flashcard data to all children components.
+ * Custom hook for accessing quiz context
+ * Throws error if used outside QuizProvider
+ * 
+ * Documentation: https://react.dev/learn/reusing-logic-with-custom-hooks
+ */
+export const useQuiz = () => {
+  const context = useContext(QuizContext);
+  if (!context) {
+    throw new Error('useQuiz must be used within QuizProvider');
+  }
+  return context;
+};
+
+/**
+ * Initial state for quiz context
+ */
+const initialState = {
+  flashcards: [],
+  currentCard: 0,
+  score: 0,
+  settings: {
+    showHints: false,
+    difficulty: 'medium'
+  }
+};
+
+/**
+ * Action types for quiz reducer
+ */
+const ACTIONS = {
+  ADD_FLASHCARD: 'ADD_FLASHCARD',
+  UPDATE_SCORE: 'UPDATE_SCORE',
+  NEXT_CARD: 'NEXT_CARD',
+  UPDATE_SETTINGS: 'UPDATE_SETTINGS'
+};
+
+/**
+ * Reducer for managing quiz state
+ * @param {Object} state - Current state
+ * @param {Object} action - Action to perform
+ */
+function quizReducer(state, action) {
+  switch (action.type) {
+    case ACTIONS.ADD_FLASHCARD:
+      return {
+        ...state,
+        flashcards: [...state.flashcards, action.payload]
+      };
+    case ACTIONS.UPDATE_SCORE:
+      return {
+        ...state,
+        score: state.score + action.payload
+      };
+    case ACTIONS.NEXT_CARD:
+      return {
+        ...state,
+        currentCard: (state.currentCard + 1) % state.flashcards.length
+      };
+    case ACTIONS.UPDATE_SETTINGS:
+      return {
+        ...state,
+        settings: { ...state.settings, ...action.payload }
+      };
+    default:
+      return state;
+  }
+}
+
+/**
+ * QuizProvider Component
+ * Provides quiz state and actions to child components
+ * 
+ * @component
+ * @example
+ * <QuizProvider>
+ *   <App />
+ * </QuizProvider>
  */
 export const QuizProvider = ({ children }) => {
-  const [flashcards, setFlashcards] = useState([
-    { question: 'What is JSX?', answer: 'A syntax extension for JavaScript' },
-    { question: 'What hook is used for state?', answer: 'useState' },
-  ]);
+  const [state, dispatch] = useReducer(quizReducer, initialState);
+
+  /**
+   * Memoized context value to prevent unnecessary re-renders
+   * Documentation: https://react.dev/reference/react/useMemo#memoizing-a-context-value
+   */
+  const value = useMemo(() => ({
+    state,
+    addFlashcard: (card) => 
+      dispatch({ type: ACTIONS.ADD_FLASHCARD, payload: card }),
+    updateScore: (points) => 
+      dispatch({ type: ACTIONS.UPDATE_SCORE, payload: points }),
+    nextCard: () => 
+      dispatch({ type: ACTIONS.NEXT_CARD }),
+    updateSettings: (settings) => 
+      dispatch({ type: ACTIONS.UPDATE_SETTINGS, payload: settings })
+  }), [state]);
 
   return (
-    <QuizContext.Provider value={{ flashcards, setFlashcards }}>
+    <QuizContext.Provider value={value}>
       {children}
     </QuizContext.Provider>
   );
 };
-```
-
-**Example Usage (Wrap in `App.js`):**
-```jsx
-import { QuizProvider } from './context/QuizContext';
-
-<QuizProvider>
-  <FlashcardList />
-</QuizProvider>
-```
-
-### **E. Custom Hook for Local Storage**
-- **Purpose**: Persist user progress across sessions.
-- **Concepts Covered**: Custom Hooks, `useEffect`.
-
-```jsx
-import { useState, useEffect } from 'react';
 
 /**
- * Custom hook to manage state with local storage.
- * @param {string} key - Local storage key.
- * @param {any} initialValue - Default value.
+ * PropTypes for QuizProvider
  */
-const useLocalStorage = (key, initialValue) => {
-  const [storedValue, setStoredValue] = useState(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(error);
-      return initialValue;
-    }
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(key, JSON.stringify(storedValue));
-  }, [key, storedValue]);
-
-  return [storedValue, setStoredValue];
-};
-
-export default useLocalStorage;
-```
-
-### Implementation Examples
-
-#### FlashcardList Component with Memoization
-```jsx:src/components/FlashcardList.js
-import React, { useContext, useMemo } from 'react';
-// ... existing imports ...
-
-const FlashcardList = () => {
-  const { flashcards } = useContext(QuizContext);
-  const memoizedFlashcards = useMemo(() => flashcards, [flashcards]);
-  
-  return (
-    <div className="flashcard-list">
-      {memoizedFlashcards.map((card, index) => (
-        <Flashcard key={index} {...card} />
-      ))}
-    </div>
-  );
+QuizProvider.propTypes = {
+  children: PropTypes.node.isRequired
 };
 ```
 
-#### Optimized Quiz Component
-```jsx:src/components/Quiz.js
-import React, { useReducer, useCallback } from 'react';
+**Usage Example:**
+```jsx:src/components/QuizApp.js
+import { useQuiz } from '../context/QuizContext';
 
-const Quiz = ({ questions }) => {
-  const [state, dispatch] = useReducer(quizReducer, initialState);
-  
-  const handleNextQuestion = useCallback(
-    () => dispatch({ type: 'NEXT_QUESTION' }), 
-    []
-  );
-  
-  const handleCorrectAnswer = useCallback(
-    () => dispatch({ type: 'INCREMENT_SCORE' }), 
-    []
-  );
+const QuizApp = () => {
+  const { state, addFlashcard, updateScore } = useQuiz();
 
   return (
     <div>
-      {/* ... existing JSX ... */}
-      <button onClick={handleCorrectAnswer}>Correct</button>
-      <button onClick={handleNextQuestion}>Next Question</button>
+      <h2>Current Score: {state.score}</h2>
+      <button onClick={() => addFlashcard({
+        question: 'New Question',
+        answer: 'New Answer'
+      })}>
+        Add Card
+      </button>
     </div>
   );
 };
 ```
 
-### Test Examples
+**Testing Context:**
+```jsx:src/tests/context/QuizContext.test.js
+import { render, act } from '@testing-library/react';
+import { useQuiz, QuizProvider } from '../../context/QuizContext';
 
-#### Flashcard Component Tests
-```jsx:src/tests/Flashcard.test.js
-test('flips card on click', () => {
-  render(<Flashcard question="Test?" answer="Answer" />);
-  fireEvent.click(screen.getByText(/Test?/i));
-  expect(screen.getByText(/Answer/i)).toBeInTheDocument();
+describe('QuizContext', () => {
+  it('provides initial state', () => {
+    const TestComponent = () => {
+      const { state } = useQuiz();
+      return <div data-testid="score">{state.score}</div>;
+    };
+
+    const { getByTestId } = render(
+<QuizProvider>
+        <TestComponent />
+</QuizProvider>
+    );
+
+    expect(getByTestId('score')).toHaveTextContent('0');
+  });
+
+  it('updates state correctly', () => {
+    const TestComponent = () => {
+      const { state, updateScore } = useQuiz();
+      return (
+        <button onClick={() => updateScore(1)}>
+          Score: {state.score}
+        </button>
+      );
+    };
+
+    const { getByRole } = render(
+      <QuizProvider>
+        <TestComponent />
+      </QuizProvider>
+    );
+
+    act(() => {
+      getByRole('button').click();
+    });
+
+    expect(getByRole('button')).toHaveTextContent('Score: 1');
+  });
 });
 ```
 
-#### Quiz Component Tests
-```jsx:src/tests/Quiz.test.js
-test('handles quiz progression', () => {
-  const questions = ['Q1', 'Q2'];
-  render(<Quiz questions={questions} />);
-  fireEvent.click(screen.getByText(/Correct/i));
-  expect(screen.getByText(/Score: 1/i)).toBeInTheDocument();
-});
-```
+**Performance Optimization Tips:**
+1. Use `useMemo` for context value to prevent unnecessary re-renders
+2. Split context into smaller pieces if possible
+3. Use separate contexts for different domains (e.g., QuizContext, ThemeContext)
+4. Implement selective updates using selectors
 
 ## Performance Metrics
 | Component          | Optimization           | Before | After  |
@@ -483,7 +908,7 @@ REACT_APP_VERSION=$npm_package_version
  * - State: https://react.dev/learn/state-a-components-memory
  */
 - [ ] Components & JSX
-  ```jsx
+```jsx
   // Example of modern React component
   const Example = ({ prop }) => {
     return <div>{prop}</div>;
@@ -623,3 +1048,380 @@ REACT_APP_VERSION=$npm_package_version
  * - Run through implementation exercises
  * - Performance optimization review
  * - Performance optimization review
+
+### **E. Custom Hooks Implementation**
+<!-- 
+Documentation References:
+- Custom Hooks: https://react.dev/learn/reusing-logic-with-custom-hooks
+- useEffect: https://react.dev/reference/react/useEffect
+- Local Storage: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
+- TypeScript with Hooks: https://react.dev/learn/typescript#type-annotations-for-hooks
+-->
+
+```jsx:src/hooks/useLocalStorage.js
+import { useState, useEffect } from 'react';
+
+/**
+ * useLocalStorage Hook
+ * 
+ * Custom hook that syncs state with localStorage and handles serialization.
+ * Implements persistence layer with error handling and type safety.
+ * 
+ * @template T
+ * @param {string} key - The localStorage key
+ * @param {T} initialValue - Default value if nothing in localStorage
+ * @returns {[T, (value: T | ((prevValue: T) => T)) => void]} Tuple of value and setter
+ * 
+ * @example
+ * const [theme, setTheme] = useLocalStorage('theme', 'light');
+ * 
+ * Key Features:
+ * 1. Type-safe storage and retrieval
+ * 2. Error handling for localStorage operations
+ * 3. Automatic JSON serialization/deserialization
+ * 4. Memory efficient with lazy initialization
+ */
+const useLocalStorage = (key, initialValue) => {
+  // Lazy initialization of state to avoid unnecessary localStorage access
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      // Parse stored json or return initialValue if none
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(`Error reading localStorage key "${key}":`, error);
+      return initialValue;
+    }
+  });
+
+  /**
+   * Effect to sync localStorage with state changes
+   * Documentation: https://react.dev/reference/react/useEffect#connecting-to-an-external-system
+   */
+  useEffect(() => {
+    try {
+      // Update localStorage when state changes
+    window.localStorage.setItem(key, JSON.stringify(storedValue));
+    } catch (error) {
+      console.error(`Error writing to localStorage key "${key}":`, error);
+    }
+  }, [key, storedValue]);
+
+  return [storedValue, setStoredValue];
+};
+
+export default useLocalStorage;
+```
+
+**Usage Examples:**
+```jsx:src/components/ThemeToggle.js
+import useLocalStorage from '../hooks/useLocalStorage';
+
+const ThemeToggle = () => {
+  const [theme, setTheme] = useLocalStorage('theme', 'light');
+
+return (
+    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+      Toggle {theme} mode
+    </button>
+  );
+};
+```
+
+```jsx:src/components/ProgressTracker.js
+import useLocalStorage from '../hooks/useLocalStorage';
+
+const ProgressTracker = () => {
+  const [progress, setProgress] = useLocalStorage('quiz-progress', {
+    completedLessons: [],
+    currentLesson: 1
+  });
+
+  const markLessonComplete = (lessonId) => {
+    setProgress(prev => ({
+      ...prev,
+      completedLessons: [...prev.completedLessons, lessonId],
+      currentLesson: prev.currentLesson + 1
+    }));
+  };
+
+return (
+<div>
+      <h3>Progress: {progress.completedLessons.length} lessons completed</h3>
+      <button onClick={() => markLessonComplete(progress.currentLesson)}>
+        Complete Current Lesson
+      </button>
+</div>
+);
+};
+```
+
+**Testing Custom Hooks:**
+```jsx:src/tests/hooks/useLocalStorage.test.js
+import { renderHook, act } from '@testing-library/react';
+import useLocalStorage from '../../hooks/useLocalStorage';
+
+describe('useLocalStorage Hook', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('should initialize with default value', () => {
+    const { result } = renderHook(() => 
+      useLocalStorage('test-key', 'default')
+    );
+
+    expect(result.current[0]).toBe('default');
+  });
+
+  it('should update localStorage when state changes', () => {
+    const { result } = renderHook(() => 
+      useLocalStorage('test-key', 'initial')
+    );
+
+    act(() => {
+      result.current[1]('updated');
+    });
+
+    expect(result.current[0]).toBe('updated');
+    expect(JSON.parse(window.localStorage.getItem('test-key'))).toBe('updated');
+  });
+
+  it('should handle errors gracefully', () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    
+    // Simulate localStorage error
+    jest.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('Storage full');
+    });
+
+    const { result } = renderHook(() => 
+      useLocalStorage('test-key', 'default')
+    );
+
+    act(() => {
+      result.current[1]('new value');
+    });
+
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+});
+```
+
+**Best Practices for Custom Hooks:**
+1. Always prefix custom hooks with "use"
+2. Implement proper error handling
+3. Use TypeScript for better type safety
+4. Add comprehensive tests
+5. Document usage examples
+
+**Common Pitfalls:**
+```jsx
+// ❌ Don't do this - causes infinite loop
+const BadExample = () => {
+  const [value, setValue] = useLocalStorage('key', {});
+  
+  useEffect(() => {
+    setValue({ ...value, updatedAt: Date.now() }); // Creates new object every render
+  }, [value]); // Dependency triggers effect
+};
+
+// ✅ Do this - stable references
+const GoodExample = () => {
+  const [value, setValue] = useLocalStorage('key', {});
+  
+  const updateTimestamp = useCallback(() => {
+    setValue(prev => ({ ...prev, updatedAt: Date.now() }));
+  }, []); // No dependencies needed
+};
+```
+
+## Hooks Mastery Implementation Guide
+
+### 1. Essential React Hooks
+<!-- 
+Documentation References:
+- Hooks Overview: https://react.dev/reference/react
+- Rules of Hooks: https://react.dev/warnings/invalid-hook-call-warning
+- Custom Hooks: https://react.dev/learn/reusing-logic-with-custom-hooks
+-->
+
+#### A. useState Deep Dive
+```jsx:src/examples/UseStateExample.js
+/**
+ * useState Hook Patterns
+ * Documentation: https://react.dev/reference/react/useState
+ * 
+ * Key Concepts:
+ * 1. Basic state management
+ * 2. Lazy initialization
+ * 3. Functional updates
+ * 4. Object state management
+ */
+const StateExample = () => {
+  // Basic state
+  const [count, setCount] = useState(0);
+  
+  // Lazy initialization
+  const [expensiveValue, setExpensiveValue] = useState(() => {
+    return someExpensiveComputation();
+  });
+  
+  // Object state
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    preferences: {}
+  });
+
+  // Correct object state updates
+  const updateEmail = (newEmail) => {
+    setUser(prev => ({
+      ...prev,
+      email: newEmail
+    }));
+  };
+
+  // Array state
+  const [items, setItems] = useState([]);
+  
+  // Correct array updates
+  const addItem = (newItem) => {
+    setItems(prev => [...prev, newItem]);
+  };
+};
+```
+
+#### B. useEffect Patterns
+```jsx:src/examples/UseEffectExample.js
+/**
+ * useEffect Hook Patterns
+ * Documentation: https://react.dev/reference/react/useEffect
+ * 
+ * Key Concepts:
+ * 1. Data fetching
+ * 2. Subscriptions
+ * 3. DOM manipulations
+ * 4. Cleanup functions
+ */
+const EffectExample = () => {
+  // Data fetching
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        const data = await api.getData();
+        if (isMounted) {
+          setData(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setError(error);
+        }
+      }
+    };
+
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Event listeners
+  useEffect(() => {
+    const handler = (event) => {
+      // Handle event
+    };
+
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  // DOM updates
+  useEffect(() => {
+    if (elementRef.current) {
+      // Manipulate DOM
+    }
+  }, [dependency]);
+};
+```
+
+#### C. useCallback and useMemo
+```jsx:src/examples/OptimizationHooks.js
+/**
+ * Performance Optimization Hooks
+ * Documentation: 
+ * - useCallback: https://react.dev/reference/react/useCallback
+ * - useMemo: https://react.dev/reference/react/useMemo
+ * 
+ * Key Concepts:
+ * 1. Memoized callbacks
+ * 2. Memoized values
+ * 3. Performance optimization
+ * 4. Dependency arrays
+ */
+const OptimizedComponent = ({ onSubmit, data }) => {
+  // Memoized callback
+  const handleClick = useCallback(() => {
+    onSubmit(data.id);
+  }, [onSubmit, data.id]);
+
+  // Memoized expensive computation
+  const processedData = useMemo(() => {
+    return expensiveOperation(data);
+  }, [data]);
+
+  // Usage with dependencies
+  const memoizedValue = useMemo(() => ({
+    id: data.id,
+    name: data.name
+  }), [data.id, data.name]);
+};
+```
+
+#### Common Hooks Pitfalls
+```jsx
+// ❌ Don't do this - Infinite loop
+useEffect(() => {
+  setCount(count + 1);
+}, [count]);
+
+// ✅ Do this - Functional update
+useEffect(() => {
+  setCount(prev => prev + 1);
+}, []); // Empty dependency array
+
+// ❌ Don't do this - Unnecessary memoization
+const simpleValue = useMemo(() => 2 + 2, []);
+
+// ✅ Do this - Memoize expensive operations
+const expensiveValue = useMemo(() => 
+  complexCalculation(props.data),
+  [props.data]
+);
+```
+
+#### Testing Hooks
+```jsx:src/tests/hooks/useCustomHook.test.js
+import { renderHook, act } from '@testing-library/react-hooks';
+
+describe('Custom Hook', () => {
+  it('updates state correctly', () => {
+    const { result } = renderHook(() => useCustomHook());
+
+    act(() => {
+      result.current.someFunction();
+    });
+
+    expect(result.current.value).toBe(expectedValue);
+  });
+
+  it('handles cleanup', () => {
+    const { unmount } = renderHook(() => useCustomHook());
+    unmount();
+    // Verify cleanup
+  });
+});
+```
