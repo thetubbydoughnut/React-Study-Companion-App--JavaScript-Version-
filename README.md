@@ -28,9 +28,16 @@ An interactive learning platform for mastering React concepts, featuring optimiz
 
 
 2. Install dependencies:
+
 ```bash
-npm install
-npm install --save-dev jest @testing-library/react @testing-library/jest-dom
+# Install React and core dependencies
+npm install react@18.2.0 react-dom@18.2.0
+
+# Install testing libraries and other dependencies
+npm install --save-dev @testing-library/react@13.4.0 @testing-library/jest-dom@5.16.5 @testing-library/user-event@14.4.3 jest@29.3.1
+
+# Install Redux toolkit and other utilities
+npm install @reduxjs/toolkit@1.9.5 react-redux@8.1.2 web-vitals@2.1.4
 ```
 
 3. Start development server:
@@ -612,4 +619,5 @@ REACT_APP_VERSION=$npm_package_version
  * - Review all documentation
  * - Practice common interview questions
  * - Run through implementation exercises
+ * - Performance optimization review
  * - Performance optimization review
