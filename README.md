@@ -26,7 +26,7 @@ An interactive learning platform for mastering React concepts, featuring optimiz
 
 1. Clone repository:
 ```bash
-git clone https://github.com/your-username/react-study-companion-app.git
+git clone https://github.com/thetubbydoughnut/React-Study-Companion-App--JavaScript-Version-
 ```
 
 2. Install dependencies:
@@ -54,7 +54,7 @@ npm test
 
 ## Project Structure
 ```
-react-study-companion/
+React-Study-Companion-App--JavaScript-Version-/
 ├── public/
 └── src/
     ├── __tests__/              # All test files
