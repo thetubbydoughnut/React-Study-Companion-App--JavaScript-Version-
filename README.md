@@ -25,13 +25,15 @@ An interactive learning platform for mastering React concepts, featuring optimiz
 ## Getting Started
 
 1. Clone repository:
-
+```bash
+git clone https://github.com/your-username/react-study-companion-app.git
+```
 
 2. Install dependencies:
 
 ```bash
 # Install React and core dependencies
-npm install react@18.2.0 react-dom@18.2.0
+npm install react@18.2.0 react-dom@18.2.0 react-scripts@5.0.1
 
 # Install testing libraries and other dependencies
 npm install --save-dev @testing-library/react@13.4.0 @testing-library/jest-dom@5.16.5 @testing-library/user-event@14.4.3 jest@29.3.1
