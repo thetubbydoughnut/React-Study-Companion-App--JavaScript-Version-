@@ -1,11 +1,11 @@
-# React Security Guide
+# React Security Guide Day 4
 
 ## Authentication & Authorization
 <!-- 
 Documentation:
 - JWT: https://jwt.io/introduction
-- React Router Auth: https://reactrouter.com/docs/en/v6/examples/auth
-- Security Best Practices: https://cheatsheetseries.owasp.org/cheatsheets/React_Security_Cheat_Sheet.html
+- React Router Auth: https://blog.logrocket.com/authentication-react-router-v6/
+- Security Best Practices: https://0xn3va.gitbook.io/cheat-sheets/framework/react/security-issues
 -->
 
 ### 1. JWT Authentication
@@ -264,6 +264,6 @@ describe('Protected Route', () => {
 
 ## Additional Resources
 - [OWASP React Security Guide](https://cheatsheetseries.owasp.org/cheatsheets/React_Security_Cheat_Sheet.html)
-- [JWT Best Practices](https://auth0.com/blog/jwt-security-best-practices/)
+- [JWT Best Practices](https://auth0.com/blog/a-look-at-the-latest-draft-for-jwt-bcp/)
 - [React Router Authentication](https://reactrouter.com/docs/en/v6/examples/auth)
 - [Web Security Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers) 
